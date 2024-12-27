@@ -8,9 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-	"os/exec"
-	"runtime"
 	"time"
 
 	"github.com/pion/webrtc/v4"
@@ -193,18 +190,5 @@ func pollForAnswer(roomName string, peedId string, peerSecret string) GetAnswers
 		}
 		return JsonResp
 
-	}
-}
-
-func clearScreen() {
-	switch runtime.GOOS {
-	case "windows":
-		cmd := exec.Command("cmd", "/c", "cls")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	default:
-		cmd := exec.Command("clear")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
 	}
 }

@@ -86,7 +86,6 @@ func HostRoomAndEstablishConnection(roomName, roomPassword string) {
 			})
 			dc.OnOpen(func() {
 				reader := bufio.NewReader(os.Stdin)
-				clearScreen()
 				fmt.Println("data channel has been opened")
 				for {
 					input, _ := reader.ReadString('\n')
