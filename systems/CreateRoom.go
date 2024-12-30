@@ -3,6 +3,8 @@ package systems
 import (
 	"fmt"
 	"net/http"
+
+	"chat-app/utils"
 )
 
 func CreateRoom(name, password string) (hostSecret string, err error) {
@@ -10,7 +12,7 @@ func CreateRoom(name, password string) (hostSecret string, err error) {
 		"name":     name,
 		"password": password,
 	}
-	respBody, statusCode, err := Request[map[string]string]("/create-room", reqBody)
+	respBody, statusCode, err := utils.Request[map[string]string](getUrl("/create-room"), reqBody)
 	if statusCode != http.StatusOK {
 		return "", fmt.Errorf("server returned status %d", statusCode)
 	}

@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-)
 
-type AnswerResponse struct {
-	AnswerSDP           string   `json:"answerSdp"`
-	AnswerIceCandidates []string `json:"answerIceCandidates"`
-}
+	"chat-app/utils"
+)
 
 func PollServerAnswer(roomName, peerSecret, peerId string) (answerSdp string, answerIceCandidates []string) {
 	reqBody := map[string]string{
@@ -19,7 +16,7 @@ func PollServerAnswer(roomName, peerSecret, peerId string) (answerSdp string, an
 	}
 	for {
 		time.Sleep(time.Second * 2)
-		JsonResp, statusCode, err := Request[AnswerResponse]("/get-answer", reqBody)
+		JsonResp, statusCode, err := utils.Request[AnswerResponse](getUrl("/get-answer"), reqBody)
 		if statusCode != http.StatusOK {
 			continue
 		}

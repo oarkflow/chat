@@ -5,15 +5,9 @@ import (
 	"log"
 	"net/http"
 	"time"
-)
 
-type ServerPeerDescription struct {
-	Secret              string
-	OfferICECandidates  []string `json:"offerIceCandidates"`  // ICE candidates from the peer
-	AnswerICECandidates []string `json:"answerIceCandidates"` // ICE candidates from the room creator
-	OfferSDP            string   `json:"offerSdp"`
-	AnswerSDP           string   `json:"answerSdp"`
-}
+	"chat-app/utils"
+)
 
 func PollUpdatedServerPeerDescriptions(AllPeerDescriptionsChan chan map[string]ServerPeerDescription, hostSecret, roomName string) {
 	reqBody := map[string]string{
@@ -25,7 +19,7 @@ func PollUpdatedServerPeerDescriptions(AllPeerDescriptionsChan chan map[string]S
 		log.Fatalf("Failed to marshal request body: %v", err)
 	}
 	for {
-		peers, statusCode, err := Request[map[string]ServerPeerDescription]("/get-peers", jsonData)
+		peers, statusCode, err := utils.Request[map[string]ServerPeerDescription](getUrl("/get-peers"), jsonData)
 		if err != nil {
 			log.Printf("Failed to make HTTP request: %v", err)
 			time.Sleep(6 * time.Second)

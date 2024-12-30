@@ -10,44 +10,40 @@ import (
 	"chat-app/utils"
 )
 
-type ConnectedPeer struct {
-	peerId          string
-	peerDescription ServerPeerDescription
-	peerConnection  *webrtc.PeerConnection
-	dataChannel     *webrtc.DataChannel
-}
-
 func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configuration) {
 	AllPeersDescription := make(chan map[string]ServerPeerDescription)
 	ConnectedPeers := make(map[string]*ConnectedPeer)
-	var ConnectedPeersMutex sync.Mutex
+	var m sync.Mutex
 	go PollUpdatedServerPeerDescriptions(AllPeersDescription, hostSecret, roomName)
 	for {
 		serverPeers := <-AllPeersDescription
 		for peerId, peer := range serverPeers {
-			ConnectedPeersMutex.Lock()
+			peer := peer
+			peerId := peerId
+			m.Lock()
 			if _, exists := ConnectedPeers[peerId]; exists {
-				ConnectedPeersMutex.Unlock()
+				m.Unlock()
 				continue
 			}
-			ConnectedPeers[peerId] = &ConnectedPeer{}
-			ConnectedPeersMutex.Unlock()
+			connPeer := &ConnectedPeer{}
+			ConnectedPeers[peerId] = connPeer
+			m.Unlock()
 			go func() {
 				answerSDP, pendingCandidates, peerConnection := CreateAnswerRTCPeerConnection(WebrtcConfiguration, peer)
 				SendAnswerToServer(answerSDP, pendingCandidates, roomName, hostSecret, peerId)
-				ConnectedPeersMutex.Lock()
-				ConnectedPeers[peerId].peerConnection = peerConnection
-				ConnectedPeersMutex.Unlock()
+				m.Lock()
+				connPeer.PeerConnection = peerConnection
+				m.Unlock()
 				peerConnection.OnDataChannel(func(dc *webrtc.DataChannel) {
-					ConnectedPeersMutex.Lock()
-					ConnectedPeers[peerId].dataChannel = dc
-					ConnectedPeersMutex.Unlock()
+					m.Lock()
+					connPeer.DataChannel = dc
+					m.Unlock()
 					dc.OnMessage(func(msg webrtc.DataChannelMessage) {
-						ConnectedPeersMutex.Lock()
-						defer ConnectedPeersMutex.Unlock()
+						m.Lock()
+						defer m.Unlock()
 						for _, connectedPeer := range ConnectedPeers {
-							if connectedPeer.dataChannel != nil {
-								err := connectedPeer.dataChannel.SendText(string(msg.Data))
+							if connectedPeer.DataChannel != nil {
+								err := connectedPeer.DataChannel.SendText(string(msg.Data))
 								if err != nil {
 									log.Printf("Failed to forward message to peer: %v", err)
 								}

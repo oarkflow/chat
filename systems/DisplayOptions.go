@@ -15,11 +15,6 @@ const (
 
 func DisplayModeOptions() (Mode int) {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("enter the signaling server address. \npress enter to use default [%s]: ", SignalingServerAddress)
-	address, _ := reader.ReadString('\n')
-	if address := strings.TrimSpace(address); address != "" {
-		SignalingServerAddress = address
-	}
 	fmt.Println("Select an option:")
 	fmt.Println("1. Host a Room")
 	fmt.Println("2. Join a Room")

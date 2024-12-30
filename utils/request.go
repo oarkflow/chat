@@ -1,4 +1,4 @@
-package systems
+package utils
 
 import (
 	"bytes"
@@ -7,12 +7,7 @@ import (
 	"net/http"
 )
 
-var (
-	SignalingServerAddress = "http://localhost:8080"
-)
-
 func Request[T any](uri string, data any) (T, int, error) {
-	uri = SignalingServerAddress + uri
 	var t T
 	var buf *bytes.Buffer
 	switch data := data.(type) {

@@ -6,15 +6,9 @@ import (
 	"net/http"
 
 	"github.com/pion/webrtc/v4"
-)
 
-type AddPeerRequest struct {
-	PeerID             string   `json:"peerId"`   // Unique identifier for the peer
-	RoomName           string   `json:"roomName"` // Name of the room
-	Password           string   `json:"password"` // Password for the room (optional)
-	OfferSDP           string   `json:"offerSdp"`
-	OfferIceCandidates []string `json:"offerIceCandidates"`
-}
+	"chat-app/utils"
+)
 
 func SendOfferToServer(offerSDP webrtc.SessionDescription, pendingCandidates []*webrtc.ICECandidate, roomName, roomPassword, peerID string) (peerSecret string) {
 	var iceCandidates []string
@@ -28,7 +22,7 @@ func SendOfferToServer(offerSDP webrtc.SessionDescription, pendingCandidates []*
 		OfferSDP:           offerSDP.SDP,
 		OfferIceCandidates: iceCandidates,
 	}
-	JsonResponse, statusCode, err := Request[map[string]string]("/add-peer", reqBody)
+	JsonResponse, statusCode, err := utils.Request[map[string]string](getUrl("/add-peer"), reqBody)
 	if err != nil {
 		log.Fatal("failed to marshal json offer body", err)
 	}

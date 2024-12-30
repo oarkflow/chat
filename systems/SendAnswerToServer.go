@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/pion/webrtc/v4"
+
+	"chat-app/utils"
 )
 
 func SendAnswerToServer(answerSDP webrtc.SessionDescription, pendingCandidates []*webrtc.ICECandidate, roomName, hostSecret, peerID string) {
@@ -20,7 +22,7 @@ func SendAnswerToServer(answerSDP webrtc.SessionDescription, pendingCandidates [
 		"answerSdp":           answerSDP.SDP,
 		"answerIceCandidates": iceCandidates,
 	}
-	_, statusCode, err := Request[map[string]any]("/set-answer", reqBody)
+	_, statusCode, err := utils.Request[map[string]any](getUrl("/set-answer"), reqBody)
 	if err != nil {
 		log.Fatal("Failed to send answer to server: ", err)
 	}
