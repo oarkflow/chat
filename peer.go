@@ -3,11 +3,10 @@ package chat
 import (
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/pion/webrtc/v4"
-
-	"github.com/oarkflow/chat/utils"
 )
 
 func UpdateHost(hostSecret, roomName string) {
@@ -57,15 +56,8 @@ func UpdateHost(hostSecret, roomName string) {
 }
 
 func ConnectToHost(roomName, roomPassword, username string) {
-	MessageHistory := ""
 	offer, pendingCandidates, peerConnection, dataChannel := CreateOffer()
 	peerSecret := SendOffer(offer, pendingCandidates, roomName, roomPassword, username)
-	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
-		MessageHistory += fmt.Sprintln(string(msg.Data))
-		utils.ClearScreen()
-		fmt.Println(MessageHistory)
-		fmt.Print("Type a message: ")
-	})
 	answerSdp, answerIceCandidates := PollAnswer(roomName, peerSecret, username)
 	for _, candidate := range answerIceCandidates {
 		peerConnection.AddICECandidate(webrtc.ICECandidateInit{Candidate: candidate})
@@ -77,13 +69,22 @@ func ConnectToHost(roomName, roomPassword, username string) {
 	if err != nil {
 		log.Fatal("Could not set remote description on client: ", err)
 	}
-	for {
-		fmt.Println(MessageHistory)
-		message := AskForMessageInput()
-		if err := dataChannel.SendText(username + ": " + message); err != nil {
+	m := InitView(username, func(msg string) {
+		if err := dataChannel.SendText(username + ": " + msg); err != nil {
 			fmt.Println(err)
 		}
-	}
+	})
+	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
+		message := string(msg.Data)
+		username := username + ":"
+		if !strings.Contains(message, username) {
+			m.messages = append(m.messages, string(msg.Data))
+		}
+		m.viewport.SetContent(strings.Join(m.messages, "\n"))
+		m.textarea.Reset()
+		m.viewport.GotoBottom()
+	})
+	RenderView(m)
 }
 
 func CreateAnswer(peerDescription ServerPeerDescription) (answer webrtc.SessionDescription, pendingIceCandidates []*webrtc.ICECandidate, peerConnection *webrtc.PeerConnection) {

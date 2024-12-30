@@ -6,8 +6,6 @@ import (
 	"github.com/oarkflow/chat"
 )
 
-var ()
-
 func main() {
 	mode, roomName, roomPassword, userName := chat.Init()
 	switch mode {

@@ -61,11 +61,15 @@ func Init() (opt Option, roomName, roomPassword, userName string) {
 			os.Exit(1)
 		}
 	}
+	roomName = strings.TrimSpace(roomName)
+	if roomName == "" {
+		roomName = "general"
+	}
 	return
 }
 
 func roomInput(label string, value *string) *huh.Input {
-	return huh.NewInput().Inline(true).Validate(NotEmpty("Room name cannot be empty")).Title(label).Value(value)
+	return huh.NewInput().Inline(true).Title(label).Value(value)
 }
 
 func passwordInput(label string, value *string) *huh.Input {
