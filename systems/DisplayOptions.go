@@ -13,7 +13,7 @@ const (
 	ModeJoin
 )
 
-func DisplayModeOptions(SignalingServerAddress string) (Mode int) {
+func DisplayModeOptions() (Mode int) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("enter the signaling server address. \npress enter to use default [%s]: ", SignalingServerAddress)
 	address, _ := reader.ReadString('\n')

@@ -9,7 +9,12 @@ import (
 	"time"
 )
 
-func PollServerAnswer(SignalingServerAddress, roomName, peerSecret, peerId string) (answerSdp string, answerIceCandidates []string) {
+type AnswerResponse struct {
+	AnswerSDP           string   `json:"answerSdp"`
+	AnswerIceCandidates []string `json:"answerIceCandidates"`
+}
+
+func PollServerAnswer(roomName, peerSecret, peerId string) (answerSdp string, answerIceCandidates []string) {
 	reqBody := map[string]string{
 		"roomName":   roomName,
 		"peerSecret": peerSecret,
@@ -29,10 +34,7 @@ func PollServerAnswer(SignalingServerAddress, roomName, peerSecret, peerId strin
 			fmt.Println(string(body))
 			continue
 		}
-		var JsonResp struct {
-			AnswerSDP           string   `json:"answerSdp"`
-			AnswerIceCandidates []string `json:"answerIceCandidates"`
-		}
+		var JsonResp AnswerResponse
 		if err := json.Unmarshal(body, &JsonResp); err != nil {
 			fmt.Println("error in polling for answer SDP", string(body), err)
 			continue

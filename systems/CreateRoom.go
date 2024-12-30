@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func CreateRoom(name, password, SignalingServerAddress string) (hostSecret string, err error) {
+func CreateRoom(name, password string) (hostSecret string, err error) {
 	reqBody := map[string]string{
 		"name":     name,
 		"password": password,

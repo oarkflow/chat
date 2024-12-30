@@ -11,7 +11,7 @@ import (
 	"github.com/pion/webrtc/v4"
 )
 
-func SendOfferToServer(offerSDP webrtc.SessionDescription, pendingCandidates []*webrtc.ICECandidate, roomName, roomPassword, peerID, SignalingServerAddress string) (peerSecret string) {
+func SendOfferToServer(offerSDP webrtc.SessionDescription, pendingCandidates []*webrtc.ICECandidate, roomName, roomPassword, peerID string) (peerSecret string) {
 	var iceCandidates []string
 	for _, c := range pendingCandidates {
 		iceCandidates = append(iceCandidates, c.ToJSON().Candidate)

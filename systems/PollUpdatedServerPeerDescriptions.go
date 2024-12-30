@@ -17,7 +17,7 @@ type ServerPeerDescription struct {
 	AnswerSDP           string   `json:"answerSdp"`
 }
 
-func PollUpdatedServerPeerDescriptions(AllPeerDescriptionsChan chan map[string]ServerPeerDescription, SignalingServerAddress string, hostSecret, roomName string) {
+func PollUpdatedServerPeerDescriptions(AllPeerDescriptionsChan chan map[string]ServerPeerDescription, hostSecret, roomName string) {
 	reqBody := map[string]string{
 		"hostSecret": hostSecret,
 		"roomName":   roomName,

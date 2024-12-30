@@ -21,12 +21,12 @@ var (
 )
 
 func main() {
-	AppMode := systems.DisplayModeOptions(SignalingServerAddress)
+	AppMode := systems.DisplayModeOptions()
 	var WebrtcConfiguration = systems.CreateWebrtcConfiguration(StunServerAddress)
 	switch AppMode {
 	case systems.ModeHost:
 		roomName, roomPassword := systems.DisplayRoomConfigOptions()
-		hostSecret, err := systems.CreateRoom(roomName, roomPassword, SignalingServerAddress)
+		hostSecret, err := systems.CreateRoom(roomName, roomPassword)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -53,7 +53,7 @@ func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configur
 	AllPeersDescription := make(chan map[string]systems.ServerPeerDescription)
 	ConnectedPeers := make(map[string]*ConnectedPeer)
 	var ConnectedPeersMutex sync.Mutex
-	go systems.PollUpdatedServerPeerDescriptions(AllPeersDescription, SignalingServerAddress, hostSecret, roomName)
+	go systems.PollUpdatedServerPeerDescriptions(AllPeersDescription, hostSecret, roomName)
 	for {
 		serverPeers := <-AllPeersDescription
 		for peerId, peer := range serverPeers {
@@ -66,7 +66,7 @@ func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configur
 			ConnectedPeersMutex.Unlock()
 			go func() {
 				answerSDP, pendingCandidates, peerConnection := systems.CreateAnswerRTCPeerConnection(WebrtcConfiguration, peer)
-				systems.SendAnswerToServer(answerSDP, pendingCandidates, roomName, hostSecret, peerId, SignalingServerAddress)
+				systems.SendAnswerToServer(answerSDP, pendingCandidates, roomName, hostSecret, peerId)
 				ConnectedPeersMutex.Lock()
 				ConnectedPeers[peerId].peerConnection = peerConnection
 				ConnectedPeersMutex.Unlock()
@@ -94,14 +94,14 @@ func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configur
 func ConnectToHost(roomName, roomPassword, username string, WebrtcConfiguration webrtc.Configuration) {
 	MessageHistory := ""
 	offer, pendingCandidates, peerConnection, dataChannel := systems.CreateOfferRTCPeerConnection(WebrtcConfiguration)
-	peerSecret := systems.SendOfferToServer(offer, pendingCandidates, roomName, roomPassword, username, SignalingServerAddress)
+	peerSecret := systems.SendOfferToServer(offer, pendingCandidates, roomName, roomPassword, username)
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
 		MessageHistory += fmt.Sprintln(string(msg.Data))
 		ClearScreen()
 		fmt.Println(MessageHistory)
 		fmt.Print("Type a message: ")
 	})
-	answerSdp, answerIceCandidates := systems.PollServerAnswer(SignalingServerAddress, roomName, peerSecret, username)
+	answerSdp, answerIceCandidates := systems.PollServerAnswer(roomName, peerSecret, username)
 	for _, candidate := range answerIceCandidates {
 		peerConnection.AddICECandidate(webrtc.ICECandidateInit{Candidate: candidate})
 	}
