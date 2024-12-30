@@ -151,7 +151,7 @@ func CreateOffer() (offer webrtc.SessionDescription, pendingIceCandidates []*web
 	if err = peerConnection.SetLocalDescription(offer); err != nil {
 		log.Println(err)
 	}
-	fmt.Println("gathering ice candidates, please wait!")
+	fmt.Println("Gathering peers information, please wait!")
 	<-webrtc.GatheringCompletePromise(peerConnection)
 	return offer, pendingIceCandidates, peerConnection, dataChannel
 }

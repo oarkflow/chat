@@ -90,8 +90,6 @@ func SendAnswer(answerSDP webrtc.SessionDescription, pendingCandidates []*webrtc
 	}
 	if statusCode != http.StatusOK {
 		log.Fatal("Failed to send answer")
-	} else {
-		fmt.Println("Sent the answer to the server successfully.")
 	}
 }
 
@@ -113,8 +111,6 @@ func SendOffer(offerSDP webrtc.SessionDescription, pendingCandidates []*webrtc.I
 	}
 	if statusCode != http.StatusOK {
 		log.Fatalf("Server responded with error after sending offer \n")
-	} else {
-		fmt.Println("Sent the offer to the server successfully.")
 	}
 	return JsonResponse["peerSecret"]
 }
