@@ -1,10 +1,7 @@
 package systems
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 )
@@ -20,23 +17,14 @@ func PollServerAnswer(roomName, peerSecret, peerId string) (answerSdp string, an
 		"peerSecret": peerSecret,
 		"peerId":     peerId,
 	}
-	jsonData, _ := json.Marshal(reqBody)
 	for {
 		time.Sleep(time.Second * 2)
-		resp, err := http.Post(SignalingServerAddress+"/get-answer", "application/json", bytes.NewBuffer(jsonData))
+		JsonResp, statusCode, err := Request[AnswerResponse]("/get-answer", reqBody)
+		if statusCode != http.StatusOK {
+			continue
+		}
 		if err != nil {
-			fmt.Printf("Error polling for answer Sdp: %v\n", err)
-			continue
-		}
-		defer resp.Body.Close()
-		body, _ := io.ReadAll(resp.Body)
-		if resp.StatusCode != http.StatusOK {
-			fmt.Println(string(body))
-			continue
-		}
-		var JsonResp AnswerResponse
-		if err := json.Unmarshal(body, &JsonResp); err != nil {
-			fmt.Println("error in polling for answer SDP", string(body), err)
+			fmt.Println("error in polling for answer SDP", err)
 			continue
 		}
 		return JsonResp.AnswerSDP, JsonResp.AnswerIceCandidates

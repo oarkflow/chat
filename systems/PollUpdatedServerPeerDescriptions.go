@@ -1,9 +1,7 @@
 package systems
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -27,26 +25,13 @@ func PollUpdatedServerPeerDescriptions(AllPeerDescriptionsChan chan map[string]S
 		log.Fatalf("Failed to marshal request body: %v", err)
 	}
 	for {
-		resp, err := http.Post(SignalingServerAddress+"/get-peers", "application/json", bytes.NewBuffer(jsonData))
+		peers, statusCode, err := Request[map[string]ServerPeerDescription]("/get-peers", jsonData)
 		if err != nil {
 			log.Printf("Failed to make HTTP request: %v", err)
 			time.Sleep(6 * time.Second)
 			continue
 		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			time.Sleep(6 * time.Second)
-			continue
-		}
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Printf("Failed to read response body after polling for answer: %v", err)
-			time.Sleep(6 * time.Second)
-			continue
-		}
-		peers := map[string]ServerPeerDescription{}
-		if err := json.Unmarshal(body, &peers); err != nil {
-			log.Printf("Failed to unmarshal response body: %v", err)
+		if statusCode != http.StatusOK {
 			time.Sleep(6 * time.Second)
 			continue
 		}

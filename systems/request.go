@@ -14,11 +14,18 @@ var (
 func Request[T any](uri string, data any) (T, int, error) {
 	uri = SignalingServerAddress + uri
 	var t T
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return t, http.StatusBadRequest, fmt.Errorf("failed to marshal request body: %w", err)
+	var buf *bytes.Buffer
+	switch data := data.(type) {
+	case []byte:
+		buf = bytes.NewBuffer(data)
+	default:
+		jsonData, err := json.Marshal(data)
+		if err != nil {
+			return t, http.StatusBadRequest, fmt.Errorf("failed to marshal request body: %w", err)
+		}
+		buf = bytes.NewBuffer(jsonData)
 	}
-	resp, err := http.Post(uri, "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(uri, "application/json", buf)
 	if err != nil {
 		return t, http.StatusBadRequest, fmt.Errorf("failed to send request: %w", err)
 	}

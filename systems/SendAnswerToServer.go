@@ -1,10 +1,7 @@
 package systems
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 
@@ -23,15 +20,12 @@ func SendAnswerToServer(answerSDP webrtc.SessionDescription, pendingCandidates [
 		"answerSdp":           answerSDP.SDP,
 		"answerIceCandidates": iceCandidates,
 	}
-	jsonData, _ := json.Marshal(reqBody)
-	resp, err := http.Post(SignalingServerAddress+"/set-answer", "application/json", bytes.NewBuffer(jsonData))
+	_, statusCode, err := Request[map[string]any]("/set-answer", reqBody)
 	if err != nil {
 		log.Fatal("Failed to send answer to server: ", err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		log.Fatalf("Failed to send answer. Server response: %s\n", string(body))
+	if statusCode != http.StatusOK {
+		log.Fatal("Failed to send answer")
 	} else {
 		fmt.Println("Sent the answer to the server successfully.")
 	}

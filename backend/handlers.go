@@ -83,5 +83,5 @@ func (rs *RoomStore) SetAnswerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	writeResponse(w, nil)
+	writeResponse(w, map[string]any{"message": "Answer created"})
 }
