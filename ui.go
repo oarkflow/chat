@@ -1,4 +1,4 @@
-package systems
+package chat
 
 import (
 	"bufio"
@@ -71,4 +71,19 @@ func DisplayRoomJoinOptions() (roomName, roomPassword, username string) {
 		log.Fatal("Room name cannot be empty")
 	}
 	return "", "", ""
+}
+
+func AskForUsernameInput() (username string) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter your username: ")
+	username, _ = reader.ReadString('\n')
+	username = strings.Trim(username, "\n")
+	return
+}
+
+func AskForMessageInput() (message string) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Type a message: ")
+	message, _ = reader.ReadString('\n')
+	return
 }

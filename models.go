@@ -1,4 +1,4 @@
-package systems
+package chat
 
 import (
 	"github.com/pion/webrtc/v4"

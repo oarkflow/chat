@@ -1,4 +1,4 @@
-package systems
+package chat
 
 import (
 	"fmt"
@@ -7,14 +7,14 @@ import (
 
 	"github.com/pion/webrtc/v4"
 
-	"chat-app/utils"
+	"github.com/oarkflow/chat/utils"
 )
 
 func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configuration) {
 	AllPeersDescription := make(chan map[string]ServerPeerDescription)
 	ConnectedPeers := make(map[string]*ConnectedPeer)
 	var m sync.Mutex
-	go PollUpdatedServerPeerDescriptions(AllPeersDescription, hostSecret, roomName)
+	go PollPeer(AllPeersDescription, hostSecret, roomName)
 	for {
 		serverPeers := <-AllPeersDescription
 		for peerId, peer := range serverPeers {
@@ -29,8 +29,8 @@ func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configur
 			ConnectedPeers[peerId] = connPeer
 			m.Unlock()
 			go func() {
-				answerSDP, pendingCandidates, peerConnection := CreateAnswerRTCPeerConnection(WebrtcConfiguration, peer)
-				SendAnswerToServer(answerSDP, pendingCandidates, roomName, hostSecret, peerId)
+				answerSDP, pendingCandidates, peerConnection := CreateAnswer(WebrtcConfiguration, peer)
+				SendAnswer(answerSDP, pendingCandidates, roomName, hostSecret, peerId)
 				m.Lock()
 				connPeer.PeerConnection = peerConnection
 				m.Unlock()
@@ -58,15 +58,15 @@ func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configur
 
 func ConnectToHost(roomName, roomPassword, username string, WebrtcConfiguration webrtc.Configuration) {
 	MessageHistory := ""
-	offer, pendingCandidates, peerConnection, dataChannel := CreateOfferRTCPeerConnection(WebrtcConfiguration)
-	peerSecret := SendOfferToServer(offer, pendingCandidates, roomName, roomPassword, username)
+	offer, pendingCandidates, peerConnection, dataChannel := CreateOffer(WebrtcConfiguration)
+	peerSecret := SendOffer(offer, pendingCandidates, roomName, roomPassword, username)
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
 		MessageHistory += fmt.Sprintln(string(msg.Data))
 		utils.ClearScreen()
 		fmt.Println(MessageHistory)
 		fmt.Print("Type a message: ")
 	})
-	answerSdp, answerIceCandidates := PollServerAnswer(roomName, peerSecret, username)
+	answerSdp, answerIceCandidates := PollAnswer(roomName, peerSecret, username)
 	for _, candidate := range answerIceCandidates {
 		peerConnection.AddICECandidate(webrtc.ICECandidateInit{Candidate: candidate})
 	}
