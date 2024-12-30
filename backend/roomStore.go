@@ -170,7 +170,7 @@ func NewRoomStore() *RoomStore {
 }
 
 func (rs *RoomStore) AddPeer(req AddPeerRequest) (*AddPeerResponse, error) {
-	if req.PeerID == "" || req.RoomName == "" || req.OfferSDP == "" || len(req.OfferIceCandiates) == 0 {
+	if req.PeerID == "" || req.RoomName == "" || req.OfferSDP == "" || len(req.OfferIceCandidates) == 0 {
 		return nil, fmt.Errorf("peer ID, SDP, offerIceCandidates[], and room name are required")
 	}
 	room, err := rs.GetRoom(req.RoomName)
@@ -191,7 +191,7 @@ func (rs *RoomStore) AddPeer(req AddPeerRequest) (*AddPeerResponse, error) {
 	newPeer := &Peer{
 		Secret:              uuid.New().String(),
 		AnswerICECandidates: make([]string, 0),
-		OfferICECandidates:  req.OfferIceCandiates,
+		OfferICECandidates:  req.OfferIceCandidates,
 		OfferSDP:            req.OfferSDP,
 	}
 	room.Peers[req.PeerID] = newPeer

@@ -6,11 +6,11 @@ import (
 )
 
 type AddPeerRequest struct {
-	PeerID            string   `json:"peerId"`
-	RoomName          string   `json:"roomName"`
-	Password          string   `json:"password"`
-	OfferSDP          string   `json:"offerSdp"`
-	OfferIceCandiates []string `json:"offerIceCandidates"`
+	PeerID             string   `json:"peerId"`
+	RoomName           string   `json:"roomName"`
+	Password           string   `json:"password"`
+	OfferSDP           string   `json:"offerSdp"`
+	OfferIceCandidates []string `json:"offerIceCandidates"`
 }
 
 type CreateRoomRequest struct {
