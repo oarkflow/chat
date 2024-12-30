@@ -20,7 +20,6 @@ func DisplayModeOptions(SignalingServerAddress string) (Mode int) {
 	if address := strings.TrimSpace(address); address != "" {
 		SignalingServerAddress = address
 	}
-
 	fmt.Println("Select an option:")
 	fmt.Println("1. Host a Room")
 	fmt.Println("2. Join a Room")
@@ -39,9 +38,11 @@ func DisplayModeOptions(SignalingServerAddress string) (Mode int) {
 
 func DisplayRoomConfigOptions() (roomName, roomPassword string) {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter room name: ")
+	fmt.Print("Enter room name: (default - general)")
 	roomName, _ = reader.ReadString('\n')
-
+	if strings.TrimSpace(roomName) == "" {
+		roomName = "general"
+	}
 	fmt.Print("Enter room password (press enter for no password): ")
 	roomPassword, _ = reader.ReadString('\n')
 	if roomName := strings.TrimSpace(roomName); roomName != "" {
@@ -54,13 +55,13 @@ func DisplayRoomConfigOptions() (roomName, roomPassword string) {
 
 func DisplayRoomJoinOptions() (roomName, roomPassword, username string) {
 	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Print("Enter room name: ")
+	fmt.Print("Enter room name: (default - general) ")
 	roomName, _ = reader.ReadString('\n')
-
+	if strings.TrimSpace(roomName) == "" {
+		roomName = "general"
+	}
 	fmt.Print("Enter room password (press enter for no password): ")
 	roomPassword, _ = reader.ReadString('\n')
-
 	fmt.Print("Enter your username: ")
 	username, _ = reader.ReadString('\n')
 	username = strings.Trim(username, "\n")
@@ -69,7 +70,6 @@ func DisplayRoomJoinOptions() (roomName, roomPassword, username string) {
 	} else {
 		log.Fatal("username cannot be empty")
 	}
-
 	if roomName := strings.TrimSpace(roomName); roomName != "" {
 		return roomName, roomPassword, username
 	} else {

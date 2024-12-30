@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// start polling for a webrtc answer from the server
 func PollServerAnswer(SignalingServerAddress, roomName, peerSecret, peerId string) (answerSdp string, answerIceCandidates []string) {
 	reqBody := map[string]string{
 		"roomName":   roomName,
@@ -20,7 +19,6 @@ func PollServerAnswer(SignalingServerAddress, roomName, peerSecret, peerId strin
 	for {
 		time.Sleep(time.Second * 2)
 		resp, err := http.Post(SignalingServerAddress+"/get-answer", "application/json", bytes.NewBuffer(jsonData))
-
 		if err != nil {
 			fmt.Printf("Error polling for answer Sdp: %v\n", err)
 			continue
@@ -31,7 +29,6 @@ func PollServerAnswer(SignalingServerAddress, roomName, peerSecret, peerId strin
 			fmt.Println(string(body))
 			continue
 		}
-
 		var JsonResp struct {
 			AnswerSDP           string   `json:"answerSdp"`
 			AnswerIceCandidates []string `json:"answerIceCandidates"`
@@ -41,6 +38,5 @@ func PollServerAnswer(SignalingServerAddress, roomName, peerSecret, peerId strin
 			continue
 		}
 		return JsonResp.AnswerSDP, JsonResp.AnswerIceCandidates
-
 	}
 }

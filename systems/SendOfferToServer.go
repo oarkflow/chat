@@ -16,7 +16,6 @@ func SendOfferToServer(offerSDP webrtc.SessionDescription, pendingCandidates []*
 	for _, c := range pendingCandidates {
 		iceCandidates = append(iceCandidates, c.ToJSON().Candidate)
 	}
-	// Request structure for adding a peer
 	type AddPeerRequest struct {
 		PeerID            string   `json:"peerId"`   // Unique identifier for the peer
 		RoomName          string   `json:"roomName"` // Name of the room
@@ -40,14 +39,12 @@ func SendOfferToServer(offerSDP webrtc.SessionDescription, pendingCandidates []*
 		log.Fatal("failed to send offer to server.", err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		log.Fatalf("Server responded with error after sending offer: %s \n", string(body))
 	} else {
 		fmt.Println("Sent the offer to the server successfully.")
 	}
-
 	body, _ := io.ReadAll(resp.Body)
 	JsonResponse := map[string]string{}
 	json.Unmarshal(body, &JsonResponse)
