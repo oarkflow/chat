@@ -10,11 +10,11 @@ import (
 	"github.com/oarkflow/chat/utils"
 )
 
-func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configuration) {
+func UpdateHost(hostSecret, roomName string) {
 	AllPeersDescription := make(chan map[string]ServerPeerDescription)
 	ConnectedPeers := make(map[string]*ConnectedPeer)
 	var m sync.Mutex
-	go PollPeer(AllPeersDescription, hostSecret, roomName)
+	go PollPeers(AllPeersDescription, hostSecret, roomName)
 	for {
 		serverPeers := <-AllPeersDescription
 		for peerId, peer := range serverPeers {
@@ -29,7 +29,7 @@ func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configur
 			ConnectedPeers[peerId] = connPeer
 			m.Unlock()
 			go func() {
-				answerSDP, pendingCandidates, peerConnection := CreateAnswer(WebrtcConfiguration, peer)
+				answerSDP, pendingCandidates, peerConnection := CreateAnswer(peer)
 				SendAnswer(answerSDP, pendingCandidates, roomName, hostSecret, peerId)
 				m.Lock()
 				connPeer.PeerConnection = peerConnection
@@ -56,9 +56,9 @@ func UpdateHost(hostSecret, roomName string, WebrtcConfiguration webrtc.Configur
 	}
 }
 
-func ConnectToHost(roomName, roomPassword, username string, WebrtcConfiguration webrtc.Configuration) {
+func ConnectToHost(roomName, roomPassword, username string) {
 	MessageHistory := ""
-	offer, pendingCandidates, peerConnection, dataChannel := CreateOffer(WebrtcConfiguration)
+	offer, pendingCandidates, peerConnection, dataChannel := CreateOffer()
 	peerSecret := SendOffer(offer, pendingCandidates, roomName, roomPassword, username)
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
 		MessageHistory += fmt.Sprintln(string(msg.Data))
@@ -86,9 +86,8 @@ func ConnectToHost(roomName, roomPassword, username string, WebrtcConfiguration 
 	}
 }
 
-func CreateAnswer(config webrtc.Configuration,
-	peerDescription ServerPeerDescription) (answer webrtc.SessionDescription, pendingIceCandidates []*webrtc.ICECandidate, peerConnection *webrtc.PeerConnection) {
-	peerConnection, err := webrtc.NewPeerConnection(config)
+func CreateAnswer(peerDescription ServerPeerDescription) (answer webrtc.SessionDescription, pendingIceCandidates []*webrtc.ICECandidate, peerConnection *webrtc.PeerConnection) {
+	peerConnection, err := webrtc.NewPeerConnection(webRTCConfig)
 	if err != nil {
 		log.Println(err)
 	}
@@ -125,8 +124,8 @@ func CreateAnswer(config webrtc.Configuration,
 	return answer, pendingIceCandidates, peerConnection
 }
 
-func CreateOffer(config webrtc.Configuration) (offer webrtc.SessionDescription, pendingIceCandidates []*webrtc.ICECandidate, peerConnection *webrtc.PeerConnection, dataChannel *webrtc.DataChannel) {
-	peerConnection, err := webrtc.NewPeerConnection(config)
+func CreateOffer() (offer webrtc.SessionDescription, pendingIceCandidates []*webrtc.ICECandidate, peerConnection *webrtc.PeerConnection, dataChannel *webrtc.DataChannel) {
+	peerConnection, err := webrtc.NewPeerConnection(webRTCConfig)
 	if err != nil {
 		log.Println(err)
 	}

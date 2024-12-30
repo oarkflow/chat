@@ -3,82 +3,87 @@ package chat
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strings"
+
+	"github.com/charmbracelet/huh"
 )
+
+type Option int
 
 const (
-	ModeHost = iota
-	ModeJoin
+	Host Option = iota
+	Join
 )
 
-func DisplayModeOptions() (Mode int) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Select an option:")
-	fmt.Println("1. Host a Room")
-	fmt.Println("2. Join a Room")
-	option, _ := reader.ReadString('\n')
-	option = strings.TrimSpace(option)
-	switch option {
-	case "1":
-		return ModeHost
-	case "2":
-		return ModeJoin
-	default:
-		log.Fatal("Invalid option, select 1 or 2")
-	}
-	return 0
+func (c Option) String() string {
+	return [...]string{"host", "join"}[c]
 }
 
-func DisplayRoomConfigOptions() (roomName, roomPassword string) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter room name: (default - general)")
-	roomName, _ = reader.ReadString('\n')
-	if strings.TrimSpace(roomName) == "" {
-		roomName = "general"
+func Init() (opt Option, roomName, roomPassword, userName string) {
+	err := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[Option]().
+				Title("Would you like to Host a chat-room or Join an existing chat-room?").
+				Value(&opt).
+				Options(
+					huh.NewOption("Host new chatroom", Host),
+					huh.NewOption("Join existing chatroom", Join),
+				),
+		),
+	).Run()
+	if err != nil {
+		fmt.Println("Trouble in chat paradise:", err)
+		os.Exit(1)
 	}
-	fmt.Print("Enter room password (press enter for no password): ")
-	roomPassword, _ = reader.ReadString('\n')
-	if roomName := strings.TrimSpace(roomName); roomName != "" {
-		return roomName, roomPassword
-	} else {
-		log.Fatal("Room name cannot be empty")
+	if opt == Host {
+		err = huh.NewForm(
+			huh.NewGroup(
+				roomInput("Enter Room Name (default - general)", &roomName),
+				passwordInput("Set Room Password", &roomPassword),
+				usernameInput("Your Host Username", &userName),
+			),
+		).Run()
+		if err != nil {
+			fmt.Println("Error while setting up hosting:", err)
+			os.Exit(1)
+		}
+	} else if opt == Join {
+		err = huh.NewForm(
+			huh.NewGroup(
+				roomInput("Enter Room Name to Join (default - general)", &roomName),
+				passwordInput("Enter Room Password", &roomPassword),
+				usernameInput("Your Username", &userName),
+			),
+		).Run()
+		if err != nil {
+			fmt.Println("Error while joining a chatroom:", err)
+			os.Exit(1)
+		}
 	}
-	return "", ""
-}
-
-func DisplayRoomJoinOptions() (roomName, roomPassword, username string) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter room name: (default - general) ")
-	roomName, _ = reader.ReadString('\n')
-	if strings.TrimSpace(roomName) == "" {
-		roomName = "general"
-	}
-	fmt.Print("Enter room password (press enter for no password): ")
-	roomPassword, _ = reader.ReadString('\n')
-	fmt.Print("Enter your username: ")
-	username, _ = reader.ReadString('\n')
-	username = strings.Trim(username, "\n")
-	if cleanName := strings.TrimSpace(username); cleanName != "" {
-		username = cleanName
-	} else {
-		log.Fatal("username cannot be empty")
-	}
-	if roomName := strings.TrimSpace(roomName); roomName != "" {
-		return roomName, roomPassword, username
-	} else {
-		log.Fatal("Room name cannot be empty")
-	}
-	return "", "", ""
-}
-
-func AskForUsernameInput() (username string) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter your username: ")
-	username, _ = reader.ReadString('\n')
-	username = strings.Trim(username, "\n")
 	return
+}
+
+func roomInput(label string, value *string) *huh.Input {
+	return huh.NewInput().Inline(true).Validate(NotEmpty("Room name cannot be empty")).Title(label).Value(value)
+}
+
+func passwordInput(label string, value *string) *huh.Input {
+	return huh.NewInput().Inline(true).Title(label).Value(value)
+}
+
+func usernameInput(label string, value *string) *huh.Input {
+	return huh.NewInput().Inline(true).Validate(NotEmpty("Username cannot be empty")).Title(label).Value(value)
+}
+
+func NotEmpty(msg string) func(string) error {
+	return func(s string) error {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			return fmt.Errorf(msg)
+		}
+		return nil
+	}
 }
 
 func AskForMessageInput() (message string) {

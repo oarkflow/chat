@@ -9,9 +9,9 @@ import (
 	"github.com/pion/webrtc/v4"
 )
 
-func GetConfig(StunServerAddress string) webrtc.Configuration {
+func GetConfig(addrs ...string) webrtc.Configuration {
 	return webrtc.Configuration{
-		ICEServers: []webrtc.ICEServer{{URLs: []string{"stun:" + StunServerAddress}}}}
+		ICEServers: []webrtc.ICEServer{{URLs: addrs}}}
 }
 
 func Request[T any](uri string, data any) (T, int, error) {

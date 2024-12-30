@@ -47,7 +47,7 @@ func PollAnswer(roomName, peerSecret, peerId string) (answerSdp string, answerIc
 	}
 }
 
-func PollPeer(AllPeerDescriptionsChan chan map[string]ServerPeerDescription, hostSecret, roomName string) {
+func PollPeers(AllPeerDescriptionsChan chan map[string]ServerPeerDescription, hostSecret, roomName string) {
 	reqBody := map[string]string{
 		"hostSecret": hostSecret,
 		"roomName":   roomName,

@@ -4,28 +4,19 @@ import (
 	"log"
 
 	"github.com/oarkflow/chat"
-	"github.com/oarkflow/chat/utils"
 )
 
-var (
-	StunServerAddress = "stun1.l.google.com:19302"
-)
+var ()
 
 func main() {
-	AppMode := chat.DisplayModeOptions()
-	WebrtcConfiguration := utils.GetConfig(StunServerAddress)
-	switch AppMode {
-	case chat.ModeHost:
-		roomName, roomPassword := chat.DisplayRoomConfigOptions()
+	mode, roomName, roomPassword, userName := chat.Init()
+	switch mode {
+	case chat.Host:
 		hostSecret, err := chat.CreateRoom(roomName, roomPassword)
 		if err != nil {
 			log.Fatal(err)
 		}
-		go chat.UpdateHost(hostSecret, roomName, WebrtcConfiguration)
-		username := chat.AskForUsernameInput()
-		chat.ConnectToHost(roomName, roomPassword, username, WebrtcConfiguration)
-	case chat.ModeJoin:
-		roomName, roomPassword, username := chat.DisplayRoomJoinOptions()
-		chat.ConnectToHost(roomName, roomPassword, username, WebrtcConfiguration)
+		go chat.UpdateHost(hostSecret, roomName)
 	}
+	chat.ConnectToHost(roomName, roomPassword, userName)
 }
