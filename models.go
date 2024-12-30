@@ -8,7 +8,11 @@ var (
 	SignalingServerAddress = "http://localhost:8080"
 	webRTCConfig           = webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
-			{URLs: []string{"stun:stun1.l.google.com:19302"}},
+			{
+				URLs: []string{
+					"stun:stun1.l.google.com:19302",
+				},
+			},
 		},
 	}
 )
