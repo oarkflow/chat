@@ -9,38 +9,30 @@ import (
 	"github.com/pion/webrtc/v4"
 )
 
+type PeerMessage struct {
+	peerId string
+	peer   ServerPeerDescription
+}
+
 func UpdateHost(hostSecret, roomName string) {
-	AllPeersDescription := make(chan map[string]ServerPeerDescription)
-	ConnectedPeers := make(map[string]*ConnectedPeer)
-	var m sync.Mutex
-	go PollPeers(AllPeersDescription, hostSecret, roomName)
-	for {
-		serverPeers := <-AllPeersDescription
-		for peerId, peer := range serverPeers {
-			peer := peer
-			peerId := peerId
-			m.Lock()
-			if _, exists := ConnectedPeers[peerId]; exists {
-				m.Unlock()
+	allPeersDescription := make(chan map[string]ServerPeerDescription)
+	peerUpdates := make(chan PeerMessage)
+	connectedPeers := make(map[string]*ConnectedPeer)
+	go func() {
+		for update := range peerUpdates {
+			if _, exists := connectedPeers[update.peerId]; exists {
 				continue
 			}
 			connPeer := &ConnectedPeer{}
-			ConnectedPeers[peerId] = connPeer
-			m.Unlock()
-			go func() {
+			connectedPeers[update.peerId] = connPeer
+			go func(peerId string, peer ServerPeerDescription, connPeer *ConnectedPeer) {
 				answerSDP, pendingCandidates, peerConnection := CreateAnswer(peer)
 				SendAnswer(answerSDP, pendingCandidates, roomName, hostSecret, peerId)
-				m.Lock()
 				connPeer.PeerConnection = peerConnection
-				m.Unlock()
 				peerConnection.OnDataChannel(func(dc *webrtc.DataChannel) {
-					m.Lock()
 					connPeer.DataChannel = dc
-					m.Unlock()
 					dc.OnMessage(func(msg webrtc.DataChannelMessage) {
-						m.Lock()
-						defer m.Unlock()
-						for _, connectedPeer := range ConnectedPeers {
+						for _, connectedPeer := range connectedPeers {
 							if connectedPeer.DataChannel != nil {
 								err := connectedPeer.DataChannel.SendText(string(msg.Data))
 								if err != nil {
@@ -50,7 +42,14 @@ func UpdateHost(hostSecret, roomName string) {
 						}
 					})
 				})
-			}()
+			}(update.peerId, update.peer, connPeer)
+		}
+	}()
+	go PollPeers(allPeersDescription, hostSecret, roomName)
+	for {
+		serverPeers := <-allPeersDescription
+		for peerId, peer := range serverPeers {
+			peerUpdates <- PeerMessage{peerId: peerId, peer: peer}
 		}
 	}
 }
@@ -125,7 +124,12 @@ func CreateAnswer(peerDescription ServerPeerDescription) (answer webrtc.SessionD
 	return answer, pendingIceCandidates, peerConnection
 }
 
-func CreateOffer() (offer webrtc.SessionDescription, pendingIceCandidates []*webrtc.ICECandidate, peerConnection *webrtc.PeerConnection, dataChannel *webrtc.DataChannel) {
+func CreateOffer() (
+	offer webrtc.SessionDescription,
+	pendingIceCandidates []*webrtc.ICECandidate,
+	peerConnection *webrtc.PeerConnection,
+	dataChannel *webrtc.DataChannel,
+) {
 	peerConnection, err := webrtc.NewPeerConnection(webRTCConfig)
 	if err != nil {
 		log.Println(err)

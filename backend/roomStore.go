@@ -44,8 +44,8 @@ type RoomStore struct {
 func (rs *RoomStore) CreateRoom(id, hostSecret, password string, isPrivate bool, maxPeers int) (*Room, error) {
 	rs.mutex.Lock()
 	defer rs.mutex.Unlock()
-	if _, exists := rs.rooms[id]; exists {
-		return nil, errors.New("room with the given ID already exists")
+	if room, exists := rs.rooms[id]; exists {
+		return room, nil
 	}
 	room := &Room{
 		ID:         id,
@@ -152,17 +152,6 @@ func (rs *RoomStore) CleanupInactiveRooms(timeout int64) {
 	}
 }
 
-func (rs *RoomStore) IsRoomNameTaken(name string) bool {
-	rs.mutex.RLock()
-	defer rs.mutex.RUnlock()
-	for _, room := range rs.rooms {
-		if room.ID == name {
-			return true
-		}
-	}
-	return false
-}
-
 func NewRoomStore() *RoomStore {
 	return &RoomStore{
 		rooms: make(map[string]*Room),
@@ -186,7 +175,7 @@ func (rs *RoomStore) AddPeer(req AddPeerRequest) (*AddPeerResponse, error) {
 		return nil, fmt.Errorf("room is full")
 	}
 	if _, exists := room.Peers[req.PeerID]; exists {
-		return nil, fmt.Errorf("peer already exists in the room")
+		delete(room.Peers, req.PeerID)
 	}
 	newPeer := &Peer{
 		Secret:              uuid.New().String(),
@@ -202,9 +191,6 @@ func (rs *RoomStore) AddPeer(req AddPeerRequest) (*AddPeerResponse, error) {
 func (rs *RoomStore) createRoom(req CreateRoomRequest) (*CreateRoomResponse, error) {
 	if req.Name == "" {
 		return nil, fmt.Errorf("room name is required")
-	}
-	if rs.IsRoomNameTaken(req.Name) {
-		return nil, fmt.Errorf("room name already exists")
 	}
 	if req.MaxPeers <= 0 {
 		req.MaxPeers = 10
