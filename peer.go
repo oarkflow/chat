@@ -69,7 +69,7 @@ func ConnectToHost(roomName, roomPassword, username string) {
 	if err != nil {
 		log.Fatal("Could not set remote description on client: ", err)
 	}
-	m := InitView(username, func(msg string) {
+	view := InitView(username, func(msg string) {
 		if err := dataChannel.SendText(username + ": " + msg); err != nil {
 			fmt.Println(err)
 		}
@@ -78,13 +78,13 @@ func ConnectToHost(roomName, roomPassword, username string) {
 		message := string(msg.Data)
 		username := username + ":"
 		if !strings.Contains(message, username) {
-			m.messages = append(m.messages, string(msg.Data))
+			view.messages = append(view.messages, string(msg.Data))
 		}
-		m.viewport.SetContent(strings.Join(m.messages, "\n"))
-		m.textarea.Reset()
-		m.viewport.GotoBottom()
+		view.viewport.SetContent(strings.Join(view.messages, "\n"))
+		view.textarea.Reset()
+		view.viewport.GotoBottom()
 	})
-	RenderView(m)
+	RenderView(view)
 }
 
 func CreateAnswer(peerDescription ServerPeerDescription) (answer webrtc.SessionDescription, pendingIceCandidates []*webrtc.ICECandidate, peerConnection *webrtc.PeerConnection) {
